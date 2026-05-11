@@ -8,7 +8,9 @@ This project displays a curated collection of photos in two modes:
 1. **Presentation Mode**: A traditional slideshow for guided viewing
 2. **Animation Mode**: Photos fall like polaroids onto a surface, creating an engaging visual experience
 
-The photos are numbered (01-69) in a specific display order for the presentation, while the animation includes additional photos from the `More/` folder for variety.
+The photos are organized into two folders:
+- `Base/`: 69 numbered images (01-69) used in the main presentation
+- `More/`: 72 additional images used only in the animation for variety
 
 ## Files Structure
 
@@ -18,7 +20,8 @@ Shatil/
 ├── animation.html         # Falling photos animation
 ├── manage.html           # Management interface
 ├── README.md             # This file
-├── 01-69_*.jpeg/png/jpg  # Ordered presentation photos
+├── Base/                 # Main presentation photos
+│   └── 01-69_*.jpeg/png  # Ordered photos with number prefixes
 └── More/                 # Additional photos for animation
     └── *.jpeg            # 72 extra photos
 ```
@@ -27,7 +30,7 @@ Shatil/
 
 ### Presentation (`presentation.html`)
 
-The main slideshow displays 69 photos in a curated order.
+The main slideshow displays 69 photos from the `Base/` folder in a curated order.
 
 **Controls:**
 | Input | Action |
@@ -48,7 +51,7 @@ The main slideshow displays 69 photos in a curated order.
 
 ### Animation (`animation.html`)
 
-Displays 141 photos (69 main + 72 from More/) falling like polaroids.
+Displays 141 photos (69 from Base/ + 72 from More/) falling like polaroids.
 
 **How Photos Are Displayed:**
 1. **Shuffle**: All 141 photos are shuffled randomly at startup
@@ -66,14 +69,18 @@ Displays 141 photos (69 main + 72 from More/) falling like polaroids.
 - Subtle ambient lighting effect
 - Photos maintain original aspect ratio (max 500x400px)
 
+### Management (`manage.html`)
+
+Drag-and-drop interface for reordering presentation photos.
+
 ## Image Naming Convention
 
-Main folder images use numbered prefixes to control presentation order:
+Images in the `Base/` folder use numbered prefixes to control presentation order:
 ```
-01_Logo Green.avif          # First slide
-02_WhatsApp Image...jpeg    # Second slide
+Base/01_Logo Green.avif          # First slide
+Base/02_WhatsApp Image...jpeg    # Second slide
 ...
-69_WhatsApp Image...jpeg    # Last slide
+Base/69_WhatsApp Image...jpeg    # Last slide
 ```
 
 ## Usage
@@ -94,7 +101,8 @@ Main folder images use numbered prefixes to control presentation order:
 ## For Claude
 
 When working with this project:
-- **Adding photos**: Add to main folder with numbered prefix (e.g., `70_newphoto.jpeg`) and update `presentation.html` slides + `animation.html` defaultImages array
+- **Adding photos**: Add to `Base/` folder with numbered prefix (e.g., `Base/70_newphoto.jpeg`) and update `presentation.html` slides + `animation.html` defaultImages array
 - **Reordering**: Use `image-reorder-editor.html` (excluded from git) to visually reorder, then rename files and update HTML references
-- **Presentation changes**: Edit the `<div class="slide">` elements in `presentation.html`
-- **Animation changes**: Edit the `defaultImages` array in `animation.html`
+- **Presentation changes**: Edit the `<div class="slide">` elements in `presentation.html` - all paths start with `Base/`
+- **Animation changes**: Edit the `defaultImages` array in `animation.html` - Base images use `Base/` prefix, More images use `More/` prefix
+- **Folder structure**: Main presentation images are in `Base/`, additional animation-only images are in `More/`
