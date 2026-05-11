@@ -360,9 +360,13 @@
             }
         }
 
+        // Get speed from URL param (default 2000ms)
+        const urlParams = new URLSearchParams(window.location.search);
+        const speed = parseInt(urlParams.get('speed')) || 2000;
+
         // Start dropping photos
         dropPhoto();
-        setInterval(dropPhoto, 2500);
+        setInterval(dropPhoto, speed);
     </script>
 </body>
 </html>
