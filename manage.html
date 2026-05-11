@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shatil - Manage Image Order</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+
+        .btn.secondary {
+            background: #555;
+        }
+
+        .btn.secondary:hover {
+            background: #666;
+        }
+
+        .image-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .image-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: grab;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .image-item:hover {
+            background: #333;
+            border-color: #4CAF50;
+            transform: scale(1.02);
+        }
+
+        .image-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .image-item * {
+            pointer-events: none;
+        }
+
+        .image-item .move-btn {
+            pointer-events: auto;
+        }
+
+        .image-item.in-presentation {
+            border-color: #4CAF50;
+        }
+
+        .image-item.not-in-presentation {
+            border-color: #666;
+            opacity: 0.7;
+        }
+
+        .image-badge {
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+
+        .badge-presentation {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .badge-more {
+            background: #666;
+            color: #ccc;
+        }
+
+        .image-item.drag-over {
+            border-color: #4CAF50;
+            background: #3a3a3a;
+        }
+
+        .image-thumbnail {
+            width: 160px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #444;
+        }
+
+        .image-thumbnail.error {
+            opacity: 0.3;
+        }
+
+        .image-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-top: 10px;
+        }
+
+        .image-name {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 5px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 160px;
+        }
+
+        .move-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .move-btn {
+            background: #444;
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .move-btn:hover {
+            background: #4CAF50;
+        }
+
+        .move-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .save-notice {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .save-notice.show {
+            opacity: 1;
+        }
+
+        .drag-handle {
+            color: #666;
+            font-size: 1.2rem;
+            cursor: grab;
+        }
+
+        .instructions {
+            background: #333;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Manage Slideshow Order</h1>
+        <div class="header-buttons">
+            <a href="presentation.html" class="btn secondary">Back to Slideshow</a>
+            <button class="btn secondary" onclick="resetOrder()">Reset to Default</button>
+            <button class="btn" onclick="saveOrder()">Save Order</button>
+        </div>
+    </div>
+
+    <div class="instructions">
+        Drag and drop images to reorder, or use the arrow buttons. Click "Save Order" when done.
+    </div>
+
+    <div class="image-list" id="imageList"></div>
+
+    <div class="save-notice" id="saveNotice">Order saved to localStorage!</div>
+
+    <script>
+        let images = [];
+
+        // Default images list
+        const defaultImages = [
+            "Logo Green.avif",
+            "b28d11_ab627de0252744979f8e6fd28450158f~mv2.jpg",
+            "b28d11_df5b738c5f284893beb874e6729be686~mv2.jpg",
+            "Screenshot 2026-05-10 at 11.55.35.png",
+            "Screenshot 2026-05-10 at 11.56.13.png",
+            "Screenshot 2026-05-10 at 11.57.45.png",
+            "WhatsApp Image 2026-05-10 at 11.48.57 (1).jpeg",
+            "WhatsApp Image 2026-05-10 at 11.48.57 (2).jpeg",
+            "WhatsApp Image 2026-05-10 at 11.48.57.jpeg",
+            "WhatsApp Image 2026-05-10 at 11.48.58 (1).jpeg",
+            "WhatsApp Image 2026-05-10 at 11.48.58 (2).jpeg",
+            "WhatsApp Image 2026-05-10 at 11.48.58 (3).jpeg",
+            "WhatsApp Image 2026-05-10 at 11.48.58.jpeg",
+            "WhatsApp Image 2026-05-10 at 11.49.55.jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.20 (1).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.20.jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.21 (1).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.21 (2).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.21 (3).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.21 (4).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.21 (5).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.21 (6).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.21.jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22 (1).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22 (2).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22 (3).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22 (4).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22 (5).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22 (6).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22 (7).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22 (8).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.22.jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.23 (1).jpeg",
+            "WhatsApp Image 2026-05-11 at 11.54.23.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.01.03.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.00.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.00 (1).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.00 (2).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.00 (3).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.00 (4).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.00 (5).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.00 (6).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.05.01.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.01 (1).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.01 (2).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.01 (3).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.01 (4).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.02.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.02 (1).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.02 (2).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.02 (3).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.02 (4).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.02 (5).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.05.02 (6).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.06.27.jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.06.27 (1).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.06.27 (2).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.06.27 (3).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.06.27 (4).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.06.27 (5).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.06.27 (6).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.06.28.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.06.28 (1).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.06.28 (2).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.06.43.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.15.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.15 (1).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.07.15 (2).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.15 (3).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.15 (4).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.07.16.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.16 (1).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.07.16 (2).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.16 (3).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.16 (4).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.16 (5).jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.17.jpeg",
+            "WhatsApp Image 2026-05-11 at 13.07.17 (1).jpeg",
+            "More/WhatsApp Image 2026-05-11 at 13.07.17 (2).jpeg",
+            "More/IMG_0312.jpeg",
+            "More/IMG_0474.jpeg",
+            "More/IMG_0479.jpeg",
+            "More/IMG_0480.jpeg",
+            "More/IMG_0486.jpeg",
+            "More/IMG_0505.jpeg",
+            "More/IMG_0506.jpeg",
+            "More/IMG_1727.jpeg",
+            "More/IMG_1994.jpeg",
+            "More/IMG_2110.jpeg",
+            "More/IMG_2705.jpeg",
+            "More/IMG_2707.jpeg",
+            "More/IMG_2716.jpeg",
+            "More/IMG_2723.jpeg",
+            "More/IMG_2724.jpeg",
+            "More/IMG_2734.jpeg",
+            "More/IMG_2778.jpeg",
+            "More/IMG_2937.jpeg",
+            "More/IMG_3718.jpeg",
+            "More/IMG_3722.jpeg",
+            "More/IMG_3741.jpeg",
+            "More/IMG_4679.jpeg",
+            "More/IMG_4868.jpeg",
+            "More/IMG_5070.jpeg",
+            "More/IMG_5083.jpeg",
+            "More/IMG_5092.jpeg",
+            "More/IMG_5427.jpeg",
+            "More/IMG_5599.jpeg",
+            "More/IMG_5601.jpeg",
+            "More/IMG_5602.jpeg",
+            "More/IMG_5603.jpeg",
+            "More/IMG_5613.jpeg",
+            "More/IMG_5623.jpeg",
+            "More/IMG_5629.jpeg",
+            "More/IMG_5792.jpeg",
+            "More/IMG_5965.jpeg",
+            "More/IMG_6326.jpeg",
+            "More/IMG_6329.jpeg",
+            "More/IMG_6333.jpeg",
+            "More/IMG_6335.jpeg",
+            "More/IMG_6337.jpeg",
+            "More/IMG_6341.jpeg",
+            "More/IMG_6347.jpeg",
+            "More/IMG_6389.jpeg",
+            "More/IMG_6448.jpeg",
+            "More/IMG_6746.jpeg",
+            "More/IMG_6771.jpeg",
+            "More/IMG_6773.jpeg",
+            "More/IMG_6847.jpeg",
+            "More/IMG_6855.jpeg",
+            "More/IMG_6953.jpeg",
+            "More/IMG_7864.jpeg",
+            "More/IMG_8370.jpeg",
+            "More/IMG_8376.jpeg",
+            "More/IMG_8380.jpeg",
+            "More/IMG_8387.jpeg",
+            "More/IMG_8391.jpeg",
+            "More/IMG_8394.jpeg",
+            "More/IMG_9413.jpeg",
+            "More/IMG_9963.jpeg",
+            "More/IMG_9978.jpeg",
+            "More/IMG_9979.jpeg"
+        ];
+
+        // Load from localStorage or use default
+        // Filter to only show images in the presentation (not in "More/" or "More/" folder)
+        function loadImages() {
+            // Load from defaultImages array (synced with images-order.json)
+            // Filter to only show slideshow images (not in More/ folder)
+            images = defaultImages.filter(img => !img.toLowerCase().startsWith('more/'));
+            renderList();
+        }
+
+        function renderList() {
+            const list = document.getElementById('imageList');
+            list.innerHTML = '';
+
+            images.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'image-item';
+                item.draggable = true;
+                item.dataset.index = index;
+
+                item.innerHTML = `
+                    <img class="image-thumbnail" src="${img}" alt="Thumbnail" loading="lazy" onerror="this.classList.add('error')">
+                    <span class="image-number">${index + 1}</span>
+                    <div class="move-buttons">
+                        <button class="move-btn" onclick="moveUp(${index})" ${index === 0 ? 'disabled' : ''}>←</button>
+                        <button class="move-btn" onclick="moveDown(${index})" ${index === images.length - 1 ? 'disabled' : ''}>→</button>
+                    </div>
+                `;
+
+                // Drag events
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragleave', handleDragLeave);
+
+                list.appendChild(item);
+            });
+        }
+
+        let draggedIndex = null;
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            const item = e.target.closest('.image-item');
+            if (item) {
+                draggedIndex = parseInt(item.dataset.index);
+                draggedElement = item;
+                setTimeout(() => item.classList.add('dragging'), 0);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', draggedIndex);
+            }
+        }
+
+        function handleDragEnd(e) {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+            }
+            document.querySelectorAll('.image-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const item = e.target.closest('.image-item');
+            if (item && item !== draggedElement) {
+                document.querySelectorAll('.image-item').forEach(i => i.classList.remove('drag-over'));
+                item.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const item = e.target.closest('.image-item');
+            if (item && !item.contains(e.relatedTarget)) {
+                item.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const item = e.target.closest('.image-item');
+            if (item && draggedIndex !== null) {
+                const dropIndex = parseInt(item.dataset.index);
+                if (draggedIndex !== dropIndex) {
+                    // Move the item
+                    const movedItem = images.splice(draggedIndex, 1)[0];
+                    images.splice(dropIndex, 0, movedItem);
+                    renderList();
+                }
+            }
+            draggedIndex = null;
+            draggedElement = null;
+        }
+
+        function moveUp(index) {
+            if (index > 0) {
+                [images[index], images[index - 1]] = [images[index - 1], images[index]];
+                renderList();
+            }
+        }
+
+        function moveDown(index) {
+            if (index < images.length - 1) {
+                [images[index], images[index + 1]] = [images[index + 1], images[index]];
+                renderList();
+            }
+        }
+
+        function saveOrder() {
+            // Get all images including More/ folder ones, with updated slideshow order
+            const moreImages = defaultImages.filter(img => img.toLowerCase().startsWith('more/'));
+            const allImages = [...images, ...moreImages];
+
+            const jsonContent = JSON.stringify({ images: allImages }, null, 2);
+            const blob = new Blob([jsonContent], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'images-order.json';
+            a.click();
+
+            URL.revokeObjectURL(url);
+
+            const notice = document.getElementById('saveNotice');
+            notice.textContent = 'JSON downloaded! Replace images-order.json with the downloaded file.';
+            notice.classList.add('show');
+            setTimeout(() => {
+                notice.classList.remove('show');
+            }, 4000);
+        }
+
+        function resetOrder() {
+            images = defaultImages.filter(img => !img.toLowerCase().startsWith('more/'));
+            renderList();
+        }
+
+        // Initialize
+        loadImages();
+    </script>
+</body>
+</html>
