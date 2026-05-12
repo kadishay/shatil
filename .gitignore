@@ -23,3 +23,6 @@ Thumbs.db
 
 # Image editor tool (utility, not part of presentation)
 image-reorder-editor.html
+
+# Large backup files
+*.zip
