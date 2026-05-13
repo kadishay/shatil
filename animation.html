@@ -411,7 +411,7 @@
         document.getElementById('total').textContent = images.length;
 
         let photoCount = 0;
-        const maxPhotos = 25;
+        const maxPhotos = 100;
 
         // Shuffle array function
         function shuffleArray(array) {
@@ -426,12 +426,44 @@
         let shuffledImages = shuffleArray(images);
         let currentIndex = 0;
 
+        // Preload cache - keeps next N images ready
+        const PRELOAD_COUNT = 5;
+        const preloadCache = new Map();
+
+        function preloadImage(src) {
+            if (preloadCache.has(src)) return preloadCache.get(src);
+            const img = new Image();
+            img.src = src;
+            preloadCache.set(src, img);
+            return img;
+        }
+
+        function preloadUpcoming() {
+            for (let i = 0; i < PRELOAD_COUNT; i++) {
+                const idx = (currentIndex + i) % shuffledImages.length;
+                preloadImage(shuffledImages[idx]);
+            }
+            // Clean old entries to prevent memory bloat
+            if (preloadCache.size > PRELOAD_COUNT * 2) {
+                const keysToKeep = new Set();
+                for (let i = 0; i < PRELOAD_COUNT; i++) {
+                    const idx = (currentIndex + i) % shuffledImages.length;
+                    keysToKeep.add(shuffledImages[idx]);
+                }
+                for (const key of preloadCache.keys()) {
+                    if (!keysToKeep.has(key)) preloadCache.delete(key);
+                }
+            }
+        }
+
         function createPhoto(imgSrc) {
             const photo = document.createElement('div');
             photo.className = 'photo falling';
 
-            const img = document.createElement('img');
-            img.src = imgSrc;
+            // Use preloaded image if available
+            const preloaded = preloadCache.get(imgSrc);
+            const img = preloaded ? preloaded.cloneNode() : document.createElement('img');
+            if (!preloaded) img.src = imgSrc;
             photo.appendChild(img);
 
             // Random values
@@ -470,11 +502,16 @@
                 currentIndex = 0;
                 shuffledImages = shuffleArray(images);
             }
+            // Preload upcoming images
+            preloadUpcoming();
         }
 
         // Get speed from URL param (default 2000ms)
         const urlParams = new URLSearchParams(window.location.search);
         const speed = parseInt(urlParams.get('speed')) || 2000;
+
+        // Preload initial images before starting
+        preloadUpcoming();
 
         // Start dropping photos
         dropPhoto();
