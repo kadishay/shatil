@@ -9,8 +9,8 @@ This project displays a curated collection of photos in two modes:
 2. **Animation Mode**: Photos fall like polaroids onto a surface, creating an engaging visual experience
 
 The photos are organized into two folders:
-- `Base/`: 69 numbered images (01-69) used in the main presentation
-- `More/`: 72 additional images used only in the animation for variety
+- `Base/`: 68 images used in the main presentation
+- `More/`: 162 additional images used only in the animation for variety
 
 ## Files Structure
 
@@ -20,17 +20,17 @@ Shatil/
 ├── animation.html         # Falling photos animation
 ├── manage.html           # Management interface
 ├── README.md             # This file
-├── Base/                 # Main presentation photos
-│   └── 01-69_*.jpeg/png  # Ordered photos with number prefixes
-└── More/                 # Additional photos for animation
-    └── *.jpeg            # 72 extra photos
+├── Base/                 # Main presentation photos (68 images)
+│   └── Shatil_Base_001-068.*  # Numbered photos
+└── More/                 # Additional photos for animation (162 images)
+    └── Shatil_More_001-163.*  # Numbered photos
 ```
 
 ## Features
 
 ### Presentation (`presentation.html`)
 
-The main slideshow displays 69 photos from the `Base/` folder in a curated order.
+The main slideshow displays 68 photos from the `Base/` folder in a curated order.
 
 **Controls:**
 | Input | Action |
@@ -51,22 +51,28 @@ The main slideshow displays 69 photos from the `Base/` folder in a curated order
 
 ### Animation (`animation.html`)
 
-Displays 141 photos (69 from Base/ + 72 from More/) falling like polaroids.
+Displays 230 photos (68 from Base/ + 162 from More/) falling like polaroids.
 
 **How Photos Are Displayed:**
-1. **Shuffle**: All 141 photos are shuffled randomly at startup
-2. **Falling**: Every 2.5 seconds, a new photo falls from the top
+1. **Shuffle**: All 230 photos are shuffled randomly at startup
+2. **Falling**: Every 2 seconds (configurable), a new photo falls from the top
 3. **Random placement**: Each photo gets randomized:
-   - Horizontal position: 1-85% from left edge
-   - Landing position: 15-65% from top
+   - Horizontal position: -5% to 90% from left edge
+   - Landing position: 5% to 80% from top
    - Rotation angles: -45° to +45° (start/mid/end)
    - Fall duration: 2.5-3.3 seconds
 4. **Max on screen**: 25 photos visible at once; older ones fade out
 5. **Loop**: When all photos shown, reshuffles and repeats
 
+**URL Parameters:**
+- `?speed=2000` - Control fall interval in milliseconds (default: 2000ms)
+
 **Visual Style:**
-- Polaroid-style white frames with shadow
-- Subtle ambient lighting effect
+- Polaroid-style frames with realistic aging effects (cream tones, subtle stains)
+- Multi-layered shadows for depth
+- Subtle sepia filter on photos
+- Green-to-brown gradient background
+- Logo title with white glow effect
 - Photos maintain original aspect ratio (max 500x400px)
 
 ### Management (`manage.html`)
@@ -75,12 +81,22 @@ Drag-and-drop interface for reordering presentation photos.
 
 ## Image Naming Convention
 
-Images in the `Base/` folder use numbered prefixes to control presentation order:
+All images follow a consistent naming format:
+
+**Base folder:**
 ```
-Base/01_Logo Green.avif          # First slide
-Base/02_WhatsApp Image...jpeg    # Second slide
+Base/Shatil_Base_001.avif    # First slide (logo)
+Base/Shatil_Base_002.jpeg    # Second slide
 ...
-Base/69_WhatsApp Image...jpeg    # Last slide
+Base/Shatil_Base_068.jpeg    # Last slide
+```
+
+**More folder:**
+```
+More/Shatil_More_001.jpeg    # First extra photo
+More/Shatil_More_002.jpeg    # Second extra photo
+...
+More/Shatil_More_163.jpeg    # Last extra photo
 ```
 
 ## Usage
@@ -101,8 +117,9 @@ Base/69_WhatsApp Image...jpeg    # Last slide
 ## For Claude
 
 When working with this project:
-- **Adding photos**: Add to `Base/` folder with numbered prefix (e.g., `Base/70_newphoto.jpeg`) and update `presentation.html` slides + `animation.html` defaultImages array
+- **Adding Base photos**: Add as `Base/Shatil_Base_XXX.jpeg` (next number after 068), update `presentation.html` slides + `animation.html` defaultImages array
+- **Adding More photos**: Add as `More/Shatil_More_XXX.jpeg` (next number after 163), update `animation.html` defaultImages array
 - **Reordering**: Use `image-reorder-editor.html` (excluded from git) to visually reorder, then rename files and update HTML references
-- **Presentation changes**: Edit the `<div class="slide">` elements in `presentation.html` - all paths start with `Base/`
-- **Animation changes**: Edit the `defaultImages` array in `animation.html` - Base images use `Base/` prefix, More images use `More/` prefix
+- **Presentation changes**: Edit the `<div class="slide">` elements in `presentation.html` - all paths start with `Base/Shatil_Base_`
+- **Animation changes**: Edit the `defaultImages` array in `animation.html` - Base images use `Base/Shatil_Base_` prefix, More images use `More/Shatil_More_` prefix
 - **Folder structure**: Main presentation images are in `Base/`, additional animation-only images are in `More/`
