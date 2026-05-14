@@ -479,13 +479,17 @@
         let currentIndex = 0;
 
         // Preload cache - keeps next N images ready
-        const PRELOAD_COUNT = 5;
+        const PRELOAD_COUNT = 15;
         const preloadCache = new Map();
 
         function preloadImage(src) {
             if (preloadCache.has(src)) return preloadCache.get(src);
             const img = new Image();
             img.src = src;
+            img.loadPromise = new Promise(resolve => {
+                if (img.complete) resolve();
+                else img.onload = resolve;
+            });
             preloadCache.set(src, img);
             return img;
         }
@@ -546,8 +550,16 @@
             }
         }
 
-        function dropPhoto() {
-            createPhoto(shuffledImages[currentIndex]);
+        async function dropPhoto() {
+            const imgSrc = shuffledImages[currentIndex];
+            const preloaded = preloadCache.get(imgSrc);
+
+            // Wait for image to load before dropping
+            if (preloaded && preloaded.loadPromise) {
+                await preloaded.loadPromise;
+            }
+
+            createPhoto(imgSrc);
             document.getElementById('count').textContent = currentIndex + 1;
             currentIndex++;
             if (currentIndex >= shuffledImages.length) {
