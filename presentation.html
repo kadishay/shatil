@@ -29,16 +29,30 @@
         }
 
         .slide {
-            display: none;
+            position: absolute;
             width: 100%;
             height: 100%;
             align-items: center;
             justify-content: center;
             padding: 60px 80px;
+            opacity: 0;
+            transform: translateY(-100%) rotate(-5deg);
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            pointer-events: none;
+            display: flex;
         }
 
         .slide.active {
-            display: flex;
+            opacity: 1;
+            transform: translateY(0) rotate(0deg);
+            pointer-events: auto;
+            z-index: 2;
+        }
+
+        .slide.underneath {
+            opacity: 1;
+            transform: translateY(0) rotate(0deg);
+            z-index: 1;
         }
 
         .slide img {
@@ -272,7 +286,7 @@
     <div class="slideshow-container">
         <button class="nav-btn prev" onclick="changeSlide(-1)">&#10095;</button>
 
-        <div class="slide active">
+        <div class="slide">
             <img src="Base/Shatil_Base_001.avif" alt="Slide 1">
         </div>
         <div class="slide">
@@ -495,18 +509,32 @@
 
         document.getElementById('totalSlides').textContent = totalSlides;
 
-        // Show the saved slide on load
-        if (currentSlide > 0) {
-            slides[0].classList.remove('active');
-            slides[currentSlide].classList.add('active');
-            document.getElementById('currentSlide').textContent = currentSlide + 1;
-            document.getElementById('progressBar').style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
-        }
+        // Show the saved slide on load (no animation)
+        slides[currentSlide].style.transition = 'none';
+        slides[currentSlide].classList.add('active');
+        document.getElementById('currentSlide').textContent = currentSlide + 1;
+        document.getElementById('progressBar').style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+        // Re-enable transitions after initial load
+        setTimeout(() => {
+            slides[currentSlide].style.transition = '';
+        }, 50);
 
         function showSlide(n) {
-            slides[currentSlide].classList.remove('active');
+            const prevSlide = currentSlide;
             currentSlide = (n + totalSlides) % totalSlides;
+
+            // Keep previous slide visible underneath
+            slides[prevSlide].classList.remove('active');
+            slides[prevSlide].classList.add('underneath');
+
+            // Bring new slide on top
             slides[currentSlide].classList.add('active');
+
+            // Remove underneath class after animation
+            setTimeout(() => {
+                slides[prevSlide].classList.remove('underneath');
+            }, 600);
+
             document.getElementById('currentSlide').textContent = currentSlide + 1;
             document.getElementById('progressBar').style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
             // Save position to localStorage
